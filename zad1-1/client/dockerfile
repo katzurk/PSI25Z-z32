@@ -1,0 +1,3 @@
+FROM python:3
+ADD udp-client-python.py /
+ENTRYPOINT ["python", "./udp-client-python.py"]
