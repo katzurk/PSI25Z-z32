@@ -8,7 +8,7 @@
 
 #define HOST "0.0.0.0"
 #define PORT 5550
-#define BUFSIZE 64
+#define BUFSIZE 1024
 
 int main(int argc, char *argv[]) {
     int sock, length;

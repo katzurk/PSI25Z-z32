@@ -3,7 +3,7 @@ import sys
 
 HOST = "z32-server-c"
 PORT = 5550
-BUFSIZE = 64
+BUFSIZE = 1024
 
 def main():
     host = HOST
