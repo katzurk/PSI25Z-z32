@@ -47,10 +47,10 @@ int main(int argc, char *argv[]) {
         }
 
         buf[nread] = '\0';
-        printf("Received datagram from %s:%d - bytes %d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), nread);
+        printf("Received datagram from %s:%d - %s, size: %d bytes\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buf, nread);
 
         char response[64];
-        snprintf(response, sizeof(response), "Received datagram - bytes %d", nread);
+        snprintf(response, sizeof(response), "Received datagram - size: %d bytes", nread);
         printf("Sending response to the client\n");
         sendto(sock, response, strlen(response), 0, (struct sockaddr*) &client_addr, client_addr_len);
     }

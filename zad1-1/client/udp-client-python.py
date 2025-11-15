@@ -19,11 +19,12 @@ def main():
         try:
             msg = b"Test datagram"
 
-            print(f"Sending datagram to server - bytes: {len(msg)}")
+            print(f"Sending datagram to server - size: {len(msg)} bytes")
             s.sendto(msg, addr)
 
             data = s.recv(BUFSIZE)
             print(f"Received response from server: {data}")
+
         except Exception as e:
             print("Error:", e)
 
