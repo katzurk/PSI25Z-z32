@@ -8,11 +8,15 @@ Klient wysyła, a serwer odbiera datagramy oraz odsyła ustaloną odpowiedź. Kl
 
 **Serwer**
 
-`./server/run.sh [port]`
+`cd server`
+
+`./run.sh [port]`
 
 **Klient**
 
-`./client/run.sh [port]`
+`cd client`
+
+`./run.sh [port]`
 
 **Usunięcie kontenerów**
 

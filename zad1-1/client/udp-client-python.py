@@ -19,7 +19,7 @@ def main():
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
 
-    print(f"Connecting to {host} on port {port}...")
+    print(f"Connecting to {host} on port {port}...\n")
     addr = (host, port)
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
@@ -34,11 +34,13 @@ def main():
                 data = s.recv(BUFSIZE)
                 times_dict[len(msg)] = time() - start
                 print(f"Received response from server: {data}")
+                print("-" * 50)
 
         except Exception as e:
             print("Error:", e)
 
-    print("Disconnected")
+    print()
+    print("Disconnected\n")
 
 
 if __name__ == "__main__":

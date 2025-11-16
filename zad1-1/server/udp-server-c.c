@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    printf("Server %s is listening on port %d\n", host, port);
+    printf("Server %s is listening on port %d\n\n", host, port);
 
     while(1) {
         int nread = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr*) &client_addr, &client_addr_len);
@@ -47,12 +47,14 @@ int main(int argc, char *argv[]) {
         }
 
         buf[nread] = '\0';
-        printf("Received datagram from %s:%d - %s, size: %d bytes\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buf, nread);
+        printf("Received datagram from %s:%d, size: %d bytes\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), nread);
 
         char response[64];
         snprintf(response, sizeof(response), "Received datagram - size: %d bytes", nread);
         printf("Sending response to the client\n");
         sendto(sock, response, strlen(response), 0, (struct sockaddr*) &client_addr, client_addr_len);
+
+        printf("--------------------------------------------------\n");
     }
 
     close(sock);
