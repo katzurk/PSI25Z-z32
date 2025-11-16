@@ -7,7 +7,7 @@ NO_PACKETS = 17
 
 HOST = "z32-server-c"
 PORT = 5550
-BUFSIZE = 32768
+BUFSIZE = 1024
 
 times_dict = dict()
 
@@ -33,14 +33,32 @@ def main():
 
                 data = s.recv(BUFSIZE)
                 times_dict[len(msg)] = time() - start
+                print(f"Received response from server: {data.decode("ascii")}")
+                print("-" * 50)
+
+        except Exception as e:
+            print(f"Error: {e}\n")
+
+        try:
+            sizes = [65024, 65280, 65408, 65472, 65504, 65506, 65507, 65508, 65512]
+            for size in sizes:
+                msg = b"a"*size
+
+                print(f"Sending datagram to server - size: {len(msg)} bytes")
+                s.sendto(msg, addr)
+
+                data = s.recv(BUFSIZE)
                 print(f"Received response from server: {data}")
                 print("-" * 50)
 
         except Exception as e:
-            print("Error:", e)
+            print(f"Error: {e}\n")
+
 
     print()
     print("Disconnected\n")
+
+    print(f"Found max size: {size}\n")
 
 
 if __name__ == "__main__":
