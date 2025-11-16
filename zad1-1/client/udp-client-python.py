@@ -48,7 +48,7 @@ def main():
                 s.sendto(msg, addr)
 
                 data = s.recv(BUFSIZE)
-                print(f"Received response from server: {data}")
+                print(f"Received response from server: {data.decode("ascii")}")
                 print("-" * 50)
 
         except Exception as e:
