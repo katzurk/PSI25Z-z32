@@ -23,11 +23,16 @@ def main():
     addr = (host, port)
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        left = 1
+        right = 1
         try:
             for i in range(NO_PACKETS):
                 msg = b"a"*2**i
 
                 print(f"Sending datagram to server - size: {len(msg)} bytes")
+                left = right
+                right = len(msg)
+            
                 start = time()
                 s.sendto(msg, addr)
 
@@ -39,9 +44,10 @@ def main():
         except Exception as e:
             print(f"Error: {e}\n")
 
-        try:
-            sizes = [65024, 65280, 65408, 65472, 65504, 65506, 65507, 65508, 65512]
-            for size in sizes:
+
+        while left < right:
+            size = (left + right) // 2
+            try:
                 msg = b"a"*size
 
                 print(f"Sending datagram to server - size: {len(msg)} bytes")
@@ -50,9 +56,9 @@ def main():
                 data = s.recv(BUFSIZE)
                 print(f"Received response from server: {data.decode("ascii")}")
                 print("-" * 50)
-
-        except Exception as e:
-            print(f"Error: {e}\n")
+                left = size + 1
+            except Exception as e:
+                right = size
 
 
     print()
