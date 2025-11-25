@@ -4,7 +4,7 @@
 #define HOST "z32-server-python"
 #define PORT 5000
 
-static int send(int sock, const char *msg, size_t len)
+static int send_message(int sock, const char *msg, size_t len)
 {
     ssize_t sent = send(sock, msg, strlen(msg), 0);
     if (sent < 0) {
@@ -16,7 +16,7 @@ static int send(int sock, const char *msg, size_t len)
 }
 
 
-static int receive(int sock, char *buf, size_t buf_size)
+static int recv_message(int sock, char *buf, size_t buf_size)
 {
     ssize_t nread = recv(sock, buf, buf_size - 1, 0);
     if (nread < 0) {
@@ -68,18 +68,18 @@ int main(void) {
     char num1[64], num2[64], op[8];
     printf("Enter first number: ");
     scanf("%63s", num1);
-    if (send(sock, num1, strlen(num1)) < 0) { close(sock); return 1; }
-    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
+    if (send_message(sock, num1, strlen(num1)) < 0) { close(sock); return 1; }
+    if (recv_message(sock, response, sizeof response) < 0) { close(sock); return 1; }
     printf("Enter operator (+ - * /): ");
     scanf("%7s", op);
-    if (send(sock, op, strlen(op)) < 0) { close(sock); return 1; }
-    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
+    if (send_message(sock, op, strlen(op)) < 0) { close(sock); return 1; }
+    if (recv_message(sock, response, sizeof response) < 0) { close(sock); return 1; }
 
     printf("Enter second number: ");
     scanf("%63s", num2);
-    if (send(sock, num2, strlen(num2)) < 0) { close(sock); return 1; }
-    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
-    
+    if (send_message(sock, num2, strlen(num2)) < 0) { close(sock); return 1; }
+    if (recv_message(sock, response, sizeof response) < 0) { close(sock); return 1; }
+
     close(sock);
     return 0;
 }
