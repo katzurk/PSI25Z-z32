@@ -26,7 +26,7 @@ static int recv_message(int sock, char *buf, size_t buf_size)
     if (nread == 0) {
         perror("Server closed connection");
         buf[0] = '\0';
-        return 0;
+        return -1;
     }
 
     buf[nread] = '\0';
