@@ -4,6 +4,36 @@
 #define HOST "z32-server-python"
 #define PORT 5000
 
+static int send(int sock, const char *msg, size_t len)
+{
+    ssize_t sent = send(sock, msg, strlen(msg), 0);
+    if (sent < 0) {
+        perror("Error sending");
+        return -1;
+    }
+    printf("Sent message to server: %s\n", msg);
+    return (int)sent;
+}
+
+
+static int receive(int sock, char *buf, size_t buf_size)
+{
+    ssize_t nread = recv(sock, buf, buf_size - 1, 0);
+    if (nread < 0) {
+        perror("Error receiving");
+        return -1;
+    }
+    if (nread == 0) {
+        perror("Server closed connection");
+        buf[0] = '\0';
+        return 0;
+    }
+
+    buf[nread] = '\0';
+    printf("Received message from server: %s\n", buf);
+    return (int)nread;
+}
+
 
 int main(void) {
     int sock;
@@ -35,14 +65,21 @@ int main(void) {
 
     printf("Connected to server %s:%d\n", HOST, PORT);
 
-    sprintf(message, "This is a test.");
-    send(sock, message, strlen(message), 0);
-    printf("Sent message to server: %s\n", message);
+    char num1[64], num2[64], op[8];
+    printf("Enter first number: ");
+    scanf("%63s", num1);
+    if (send(sock, num1, strlen(num1)) < 0) { close(sock); return 1; }
+    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
+    printf("Enter operator (+ - * /): ");
+    scanf("%7s", op);
+    if (send(sock, op, strlen(op)) < 0) { close(sock); return 1; }
+    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
 
-    int nread = recv(sock, response, sizeof(response) - 1, 0);
-    response[nread] = '\0';
-    printf("Received response from server: %s\n", response);
-
+    printf("Enter second number: ");
+    scanf("%63s", num2);
+    if (send(sock, num2, strlen(num2)) < 0) { close(sock); return 1; }
+    if (receive(sock, response, sizeof response) < 0) { close(sock); return 1; }
+    
     close(sock);
     return 0;
 }
