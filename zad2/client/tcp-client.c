@@ -30,7 +30,7 @@ static int recv_message(int sock, char *buf, size_t buf_size)
     }
 
     buf[nread] = '\0';
-    printf("Received message from server: %s\n", buf);
+    printf("Received message from server: %s\n\n", buf);
     return (int)nread;
 }
 
@@ -78,6 +78,9 @@ int main(void) {
     printf("Enter second number: ");
     scanf("%63s", num2);
     if (send_message(sock, num2, strlen(num2)) < 0) { close(sock); return 1; }
+    if (recv_message(sock, response, sizeof response) < 0) { close(sock); return 1; }
+
+    printf("%s %s %s\n", num1, op, num2);
     if (recv_message(sock, response, sizeof response) < 0) { close(sock); return 1; }
 
     close(sock);

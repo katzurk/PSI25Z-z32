@@ -7,7 +7,7 @@ PORT = 5000
 def send_message(conn, message):
     try:
         conn.sendall(message.encode())
-        print(f"Sent message: {message}")
+        print(f"Sent message: {message}\n")
     except Exception as e:
         print(f"Error sending message: {e}")
         return False
@@ -45,7 +45,7 @@ def main():
         while True:
             conn, addr = s.accept()
             with conn:
-                print(f"Connected to {addr}")
+                print(f"Connected to {addr}\n")
 
                 num1 = recv_message(conn)
                 if not num1:
@@ -62,7 +62,7 @@ def main():
                     continue
                 if not send_message(conn, "received second number"):
                     continue
-                
+
                 print(f"Operation to perform: {num1} {operation} {num2}")
                 sum_result = perform_operation(float(num1), float(num2), operation)
                 send_message(conn, f"Result: {sum_result}")
