@@ -3,18 +3,19 @@ from datetime import datetime
 
 HOST = "0.0.0.0"
 PORT = 5000
+BUFSIZE = 1024
 
 def send_message(conn, message):
     try:
         conn.sendall(message.encode())
-        print(f"Sent message: {message}\n")
+        print(f"Sent message: {message}")
     except Exception as e:
         print(f"Error sending message: {e}")
         return False
     return True
 
 def recv_message(conn):
-    data = conn.recv(1024).decode().strip()
+    data = conn.recv(BUFSIZE).decode().strip()
     print(f"Received message: {data}")
     if not data:
         print("No data received, closing connection.")
@@ -50,19 +51,16 @@ def main():
                 num1 = recv_message(conn)
                 if not num1:
                     continue
-                if not send_message(conn, "received first number"):
-                    continue
+
                 operation = recv_message(conn)
                 if not operation:
                     continue
-                if not send_message(conn, "received operator"):
-                    continue
+
                 num2 = recv_message(conn)
                 if not num2:
                     continue
-                if not send_message(conn, "received second number"):
-                    continue
 
+                print("-" * 50)
                 print(f"Operation to perform: {num1} {operation} {num2}")
                 sum_result = perform_operation(float(num1), float(num2), operation)
                 send_message(conn, f"Result: {sum_result}")
