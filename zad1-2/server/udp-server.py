@@ -8,12 +8,18 @@ BUFSIZE = 1024
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.bind((HOST, PORT))
-        print(f"UDP server {HOST} listening on port {PORT}")
+        print(f"UDP server listening on {PORT}")
 
         while True:
             data, addr = s.recvfrom(BUFSIZE)
-            message = data.decode().strip()
-            print(f"Received mesage: {message}\n from address: {addr}")
+
+            seq_num = data[0]
+            payload = data[1:]
+
+            print(f"Packet from {addr}: Seq={seq_num}, Payload Size={len(payload)} bytes")
+
+            ack = bytes([seq_num])
+            s.sendto(ack, addr)
 
 
 if __name__ == "__main__":
