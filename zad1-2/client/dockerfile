@@ -1,5 +1,6 @@
 FROM gcc:4.9
 COPY . /client
 WORKDIR /client/
+RUN chmod +x generate_random.sh && ./generate_random.sh
 RUN gcc -o udp-client udp-client.c
 ENTRYPOINT ["./udp-client"]
