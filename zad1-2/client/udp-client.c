@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <stdlib.h>
 
 #define HOST "z32-server-python"
 #define PORT 5000
@@ -21,6 +22,14 @@ int load_file(const char *filename, char *buffer, size_t max_size) {
     size_t bytes_read = fread(buffer, 1, max_size, file);
     fclose(file);
     return bytes_read;
+}
+
+void print_file_hash(const char *filename) {
+    char command[256];
+    printf("Client MD5 Hash: ");
+    fflush(stdout);
+    snprintf(command, sizeof(command), "md5sum %s", filename);
+    system(command);
 }
 
 int main(void) {
@@ -88,6 +97,10 @@ int main(void) {
     }
 
     printf("Successfully sent all packets\n\n");
+    
+    printf("------------------------------\n");
+    print_file_hash(FILE_NAME);
+    printf("------------------------------\n");
 
     close(sock);
     return 0;
