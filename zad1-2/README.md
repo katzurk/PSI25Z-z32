@@ -27,3 +27,7 @@ serwer mógł odtworzyć cały plik. Należy uruchomić program w środowisku sy
 **Usunięcie kontenerów**
 
 `./clean.sh`
+
+**Włączenie zakłóceń**
+
+`./disrupt.sh`

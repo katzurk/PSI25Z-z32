@@ -55,9 +55,19 @@ int main(void) {
     char current_seq = 0;
     char ack;
     int total_packets = FILE_SIZE / PACKET_DATA_SIZE;
-    int i;
+    int i = 0;
+    struct timeval timeout;
+    int max_retries = 10;
 
-    for (i = 0; i < total_packets; i++) {
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    printf("Starting sending packets in 10s...\n\n");
+    sleep(10); // to run disrupt.sh
+
+    while (i < total_packets) {
+
         packet[0] = current_seq;
 
         memcpy(&packet[1], &file_buffer[i * PACKET_DATA_SIZE], PACKET_DATA_SIZE);
@@ -65,11 +75,19 @@ int main(void) {
         sendto(sock, packet, PACKET_SIZE, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
         printf("Sent Packet %d: Seq=%d\n", i, current_seq);
 
-        recvfrom(sock, &ack, 1, 0, NULL, NULL);
-        printf("Received ACK: %d\n", ack);
+        int nread = recvfrom(sock, &ack, 1, 0, NULL, NULL);
 
-        current_seq = !current_seq;
+        if (nread > 0 && ack == current_seq) {
+            printf("Received ACK: %d\n", ack);
+            current_seq = !current_seq;
+            i++;
+        }
+        else {
+            printf("[TIMEOUT] Resending packet %d\n", i);
+        }
     }
+
+    printf("Successfully sent all packets\n\n");
 
     close(sock);
     return 0;
