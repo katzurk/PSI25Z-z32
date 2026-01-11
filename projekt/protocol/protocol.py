@@ -57,6 +57,6 @@ def recv_nbytes(sock, n):
     while len(data) < n:
         chunk = sock.recv(n - len(data))
         if not chunk:
-            raise ConnectionError
+            raise ConnectionError("Connection closed")
         data += chunk
     return data

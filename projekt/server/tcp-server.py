@@ -4,7 +4,7 @@ import sys
 import struct
 import threading
 import time
-from protocol import (
+from protocol.protocol import (
     otp_xor, encode_message, decode_message, recv_nbytes,
     MSG_CLIENT_HELLO, MSG_SERVER_HELLO, MSG_ENCRYPTED,
     CLIENT_HELLO_FMT, SERVER_HELLO_FMT, ENCRYPTED_FMT

@@ -1,3 +1,5 @@
 FROM python:3
-ADD tcp-client.py /
+WORKDIR /client
+COPY client/tcp-client.py .
+COPY protocol/ ./protocol/
 ENTRYPOINT ["python", "./tcp-client.py"]
