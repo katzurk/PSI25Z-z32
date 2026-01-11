@@ -1,50 +1,65 @@
 import socket
 import struct
 import random
-import hashlib
-import hmac
-import time
 from protocol.protocol import (
     otp_xor, encode_message, decode_message, recv_nbytes,
     MSG_CLIENT_HELLO, MSG_SERVER_HELLO, MSG_ENCRYPTED, MSG_END_SESSION,
-    CLIENT_HELLO_FMT, SERVER_HELLO_FMT, ENCRYPTED_FMT
+    CLIENT_HELLO_FMT, SERVER_HELLO_FMT, ENCRYPTED_FMT, MSG_REGULAR
 )
 
 HOST = "z32-server-projekt"
 PORT = 5000
+P = 2147483647
+G = 2
 
 
 def main():
-    p = 14
-    g = 5
-    a = random.randint(1, p-2)
-    A = pow(g, a, p)
+    private_key = random.randint(1, P-2)
+    public_key = pow(G, private_key, P)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((HOST, PORT))
+    msg_count = 0
 
-        # ClientHello
-        client_hello = struct.pack(CLIENT_HELLO_FMT, MSG_CLIENT_HELLO, p, g, A)
-        sock.sendall(client_hello)
-        print("Sent ClientHello")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((HOST, PORT))
 
-        # ServerHello
-        data = recv_nbytes(sock, struct.calcsize("!BI"))
-        header, B = struct.unpack("!BI", data)
-        if header != MSG_SERVER_HELLO:
-            raise ValueError("Incorrect message type")
-        print(f"Received ServerHello: B={B}")
+            # ClientHello
+            client_hello = struct.pack(CLIENT_HELLO_FMT, MSG_CLIENT_HELLO, P, G, public_key)
+            sock.sendall(client_hello)
+            print("Sent ClientHello.")
 
-        session_key = pow(B, a, p)
+            # ServerHello
+            data = recv_nbytes(sock, struct.calcsize(SERVER_HELLO_FMT))
+            header, server_key = struct.unpack(SERVER_HELLO_FMT, data)
+            if header != MSG_SERVER_HELLO:
+                raise ValueError("Incorrect message type")
 
-        time.sleep(30)
+            session_key = pow(server_key, private_key, P)
+            print("Established session key.")
 
-        # EndSession
-        msg_count = 0
-        end_msg = b"EndSession"
-        packet = encode_message(MSG_END_SESSION, end_msg, session_key, msg_count)
-        sock.sendall(packet)
-        print("Sent EndSession")
+            while True:
+                try:
+                    user_input = input("Client > ")
+
+                    plaintext = user_input.encode()
+                    ciphertext = otp_xor(plaintext, session_key, msg_count)
+                    packet = encode_message(MSG_REGULAR, ciphertext, session_key)
+                    sock.sendall(packet)
+                    print(f"> Sent message (No. {msg_count})")
+                    msg_count += 1
+
+                except KeyboardInterrupt:
+                    end_msg = b"EndSession"
+                    ciphertext = otp_xor(end_msg, session_key, msg_count)
+                    packet = encode_message(MSG_END_SESSION, ciphertext, session_key)
+                    sock.sendall(packet)
+                    print("\n> Client shutting down...")
+                    break
+
+    except ConnectionRefusedError:
+        print("Error: Could not connect to server.")
+    except Exception as e:
+        print(f'Error: {e}')
 
 
 if __name__ == "__main__":
