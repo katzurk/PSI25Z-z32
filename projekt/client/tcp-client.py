@@ -66,6 +66,7 @@ class ClientSession:
             print(f'[!] Exception: {e}')
             self.cleanup()
 
+
     def send_message(self):
         if not self.connected:
             print("[!] Not connected.")
@@ -115,27 +116,42 @@ class ClientSession:
         self.session_key = None
         self.msg_count = 0
         self.connected = False
-        print("[*] Disconnected from server.")
+        print("[C] Disconnected from server.")
+
+
+def print_menu():
+    print("=== Menu ===")
+    print("1. Connect to server")
+    print("2. Send message")
+    print("3. Disconnect")
+    print("4. Exit")
+    print("5. Show menu")
+    print("============\n")
+
 
 def main():
     session = ClientSession()
+    print_menu()
 
-    try:
-        session.connect()
-        while True:
-            try:
-                session.send_message()
-            except KeyboardInterrupt:
-                print("\n[*] Client shutting down...")
+    while True:
+        choice = input("Choice > ").strip()
+
+        if choice == "1":
+            session.connect()
+        elif choice == "2":
+            session.send_message()
+        elif choice == "3":
+            session.disconnect()
+        elif choice == "4":
+            if session.connected:
                 session.disconnect()
-                sys.exit(0)
-                
+            print("Exiting...")
+            break
+        elif choice == "5":
+            print_menu()
 
-
-    except ConnectionRefusedError:
-        print("Error: Could not connect to server.")
-    except Exception as e:
-        print(f'Error: {e}')
+        else:
+            print("[!] Invalid choice. Type '5' to show the menu.")
 
 
 if __name__ == "__main__":
