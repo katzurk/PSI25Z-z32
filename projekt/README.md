@@ -12,3 +12,21 @@ Celem projektu jest zaprojektowanie oraz implementacja szyfrowanego protokołu o
 - Wiadomości ClientHello oraz ServerHello służą do wymiany kluczy szyfrujących, nie są one szyfrowane
 - Sesja może zostać zakończona zarówno przez klienta jak i serwer, poprzez wysłanie wiadomości EndSession
 - Wszystkie wiadomości między klientem a serwerem, w tym EndSession, są szyfrowane
+
+## Uruchomienie
+
+**Serwer**
+
+`cd server`
+
+`./run.sh [liczba klientów]`
+
+**Klient**
+
+`cd client`
+
+`./run.sh`
+
+**Usunięcie kontenerów**
+
+`./clean.sh`
