@@ -1,6 +1,7 @@
 import socket
 import struct
 import random
+import sys
 from protocol.protocol import (
     otp_xor, encode_message, decode_message, recv_nbytes,
     MSG_CLIENT_HELLO, MSG_SERVER_HELLO, MSG_ENCRYPTED, MSG_END_SESSION,
@@ -12,6 +13,27 @@ PORT = 5000
 P = 2147483647
 G = 2
 
+class ClientSession:
+    def __init__(self):
+        self.sock = None
+        self.session_key = None
+        self.msg_count = 0
+        self.connected = False
+    
+    def connect(self):
+        pass
+
+    def send_message(self):
+        pass
+
+    def cleanup(self):
+        if self.sock:
+            self.sock.close()
+        self.sock = None
+        self.session_key = None
+        self.msg_count = 0
+        self.connected = False
+        print("[*] Disconnected from server.")
 
 def main():
     private_key = random.randint(1, P-2)
