@@ -89,6 +89,25 @@ class ClientSession:
             print(f"[!] Exception: {e}")
             self.cleanup()
 
+
+    def disconnect(self):
+        if not self.connected:
+            print("[!] Not connected.")
+            return
+
+        print("[*] Closing session...")
+        try:
+            end_msg = b"EndSession"
+            ciphertext = otp_xor(end_msg, self.session_key, self.msg_count)
+            packet = encode_message(MSG_END_SESSION, ciphertext, self.session_key)
+            self.sock.sendall(packet)
+            print("[C] Sent EndSession.")
+        except Exception as e:
+            print(f"[!] Error sending EndSession: {e}")
+        finally:
+            self.cleanup()
+
+
     def cleanup(self):
         if self.sock:
             self.sock.close()
@@ -107,9 +126,10 @@ def main():
             try:
                 session.send_message()
             except KeyboardInterrupt:
-                print("\n[*] Exiting...")
-                session.cleanup()
+                print("\n[*] Client shutting down...")
+                session.disconnect()
                 sys.exit(0)
+                
 
 
     except ConnectionRefusedError:
