@@ -20,8 +20,51 @@ class ClientSession:
         self.msg_count = 0
         self.connected = False
     
+    def generate_keys(self):
+            private_key = random.randint(1, P-2)
+            public_key = pow(G, private_key, P)
+            return private_key, public_key
+    
+    def set_session_key(self, server_key, private_key):
+        self.session_key = pow(server_key, private_key, P)
+        self.msg_count = 0
+        self.connected = True
+
+    
     def connect(self):
-        pass
+        if self.connected:
+            print("[!] Already connected.")
+            return
+
+        print(f"[*] Connecting to {HOST}:{PORT}...")
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.connect((HOST, PORT))
+
+            # Generate DH keys
+            private_key, public_key = self.generate_keys()
+
+            # 1. Send ClientHello
+            client_hello = struct.pack(CLIENT_HELLO_FMT, MSG_CLIENT_HELLO, P, G, public_key)
+            self.sock.sendall(client_hello)
+            print("Sent ClientHello.")
+
+            # 2. Receive ServerHello
+            data = recv_nbytes(self.sock, struct.calcsize(SERVER_HELLO_FMT))
+            header, server_key = struct.unpack(SERVER_HELLO_FMT, data)
+            
+            if header != MSG_SERVER_HELLO:
+                raise ValueError("[!] Invalid ServerHello header")
+
+            # Compute shared secret
+            self.set_session_key(server_key, private_key)
+            print(f"Connected. Session key established: {self.session_key}")
+
+        except ConnectionRefusedError:
+            print("[!] Connection refused.")
+        except Exception as e:
+            print(f'[!] {e}')
+            self.cleanup()
 
     def send_message(self):
         pass
@@ -36,47 +79,28 @@ class ClientSession:
         print("[*] Disconnected from server.")
 
 def main():
-    private_key = random.randint(1, P-2)
-    public_key = pow(G, private_key, P)
-
-    msg_count = 0
+    session = ClientSession()
 
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((HOST, PORT))
+        session.connect()
+        while True:
+            try:
+                user_input = input("Client > ")
 
-            # ClientHello
-            client_hello = struct.pack(CLIENT_HELLO_FMT, MSG_CLIENT_HELLO, P, G, public_key)
-            sock.sendall(client_hello)
-            print("Sent ClientHello.")
+                plaintext = user_input.encode()
+                ciphertext = otp_xor(plaintext, session.session_key, session.msg_count)
+                packet = encode_message(MSG_REGULAR, ciphertext, session.session_key)
+                session.sock.sendall(packet)
+                print(f"> Sent message (No. {session.msg_count})")
+                session.msg_count += 1
 
-            # ServerHello
-            data = recv_nbytes(sock, struct.calcsize(SERVER_HELLO_FMT))
-            header, server_key = struct.unpack(SERVER_HELLO_FMT, data)
-            if header != MSG_SERVER_HELLO:
-                raise ValueError("Incorrect message type")
-
-            session_key = pow(server_key, private_key, P)
-            print("Established session key.")
-
-            while True:
-                try:
-                    user_input = input("Client > ")
-
-                    plaintext = user_input.encode()
-                    ciphertext = otp_xor(plaintext, session_key, msg_count)
-                    packet = encode_message(MSG_REGULAR, ciphertext, session_key)
-                    sock.sendall(packet)
-                    print(f"> Sent message (No. {msg_count})")
-                    msg_count += 1
-
-                except KeyboardInterrupt:
-                    end_msg = b"EndSession"
-                    ciphertext = otp_xor(end_msg, session_key, msg_count)
-                    packet = encode_message(MSG_END_SESSION, ciphertext, session_key)
-                    sock.sendall(packet)
-                    print("\n> Client shutting down...")
-                    break
+            except KeyboardInterrupt:
+                end_msg = b"EndSession"
+                ciphertext = otp_xor(end_msg, session.session_key, session.msg_count)
+                packet = encode_message(MSG_END_SESSION, ciphertext, session.session_key)
+                session.sock.sendall(packet)
+                print("\n> Client shutting down...")
+                break
 
     except ConnectionRefusedError:
         print("Error: Could not connect to server.")
