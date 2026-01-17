@@ -15,7 +15,7 @@ PORT = 5000
 
 connections = {}
 connections_lock = threading.Lock()
-
+client_threads = []
 
 def send_ServerHello(sock, public_key):
     msg = struct.pack(SERVER_HELLO_FMT, MSG_SERVER_HELLO, public_key)
@@ -72,8 +72,18 @@ def handle_client(client_sock, addr):
         except Exception as e:
             print("Error:", e)
 
+        finally:
+            with connections_lock:
+                connections.pop((host, port), None)
+            print(f"Disconnected {host}:{port}")
+
+
+
 def close_connection(sock_id):
     with connections_lock:
+        if sock_id + 1 > len(connections) or sock_id < 0:
+            print("Connection does not exist")
+            return
         addr = list(connections.keys())[sock_id]
         client = connections.pop(addr)
         msg_count = client["msg_count"]
@@ -82,6 +92,7 @@ def close_connection(sock_id):
         try:
             send_EndSession(client["socket"], key, msg_count)
             client["socket"].close()
+            print(f"Disconnected client {sock_id}")
         except Exception as e:
             print("Error:", e)
 
@@ -100,9 +111,14 @@ def close_all_connections():
             except Exception as e:
                 print("Error:", e)
 
+    for t in client_threads:
+        t.join()
+
 
 def handle_command(command):
     cmd = command.strip().split()
+    if len(cmd) == 0:
+        return
 
     # S - show connections
     if cmd[0] == "S":
@@ -115,21 +131,19 @@ def handle_command(command):
 
     # E <connection_idx> - end session
     elif cmd[0] == "E":
-        pass
-        # idx = int(cmd[1])
-        # close_connection(idx)
-
-    # C - close server
-    elif cmd[0] == "C":
-        pass
-        # print("> Server shutting down...")
-        # close_all_connections()
-        # sys.exit(0)
+        if len(cmd) < 2:
+            print("Usage: E <connection id>")
+            return
+        idx = int(cmd[1])
+        close_connection(idx)
 
 def user_input_thread():
     while True:
-        command = input()
-        handle_command(command)
+        try:
+            command = input()
+            handle_command(command)
+        except KeyboardInterrupt:
+            break
 
 
 def main():
@@ -147,6 +161,11 @@ def main():
 
         print(f"> Server {HOST} listening on port {PORT}")
         print("-"*50)
+        print("> Options:")
+        print("  [S]       - Show all connected clients")
+        print("  [E <idx>] - End session with client at index")
+        print("  [Ctrl+C]  - Close server")
+        print("-"*50)
         print()
 
         while True:
@@ -154,15 +173,10 @@ def main():
                 client, addr = s.accept()
                 client_handler = threading.Thread(target=handle_client, args=(client, addr))
                 client_handler.start()
+                client_threads.append(client_handler)
             except KeyboardInterrupt:
-                print("> Server shutting down...")
-                with connections_lock:
-                    for addr, client in list(connections.items()):
-                        try:
-                            client["socket"].close()
-                        except:
-                            pass
-                    connections.clear()
+                print("\n> Server shutting down...")
+                close_all_connections()
                 break
 
 
