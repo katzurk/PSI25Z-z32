@@ -18,7 +18,7 @@ MAC_SIZE = 32
 def otp_xor(data, key, msg_count):
     seed = key + msg_count
     rng = random.Random(seed)
-    key_stream = bytes([rng.randint(0, 255) for i in range(len(data))])
+    key_stream = bytes([rng.randint(0, 255) for _ in range(len(data))])
     return bytes([b ^ k for b, k in zip(data, key_stream)])
 
 
@@ -34,17 +34,18 @@ def encode_message(msg_type, ciphertext, key):
 
 def decode_message(sock, key):
     header = recv_nbytes(sock, 5)
-    if header[0] != 0x04:
-        raise ValueError("Incorrect message type")
+    if not header or header[0] != MSG_ENCRYPTED:
+        raise ValueError("Incorrect message type or empty header")
+    
     length = struct.unpack("!I", header[1:])[0]
 
     payload_mac = recv_nbytes(sock, length + 32)
     payload = payload_mac[:length]
-
     recv_mac = payload_mac[length:]
+
     calc_mac = hmac.new(key.to_bytes(4, 'big'), header + payload, hashlib.sha256).digest()
     if not hmac.compare_digest(calc_mac, recv_mac):
-        raise ValueError("Incorrect MAC")
+        raise ValueError("Incorrect MAC - Message Integrity Check Failed")
 
     msg_type = payload[0]
     ciphertext = payload[1:]
@@ -57,6 +58,6 @@ def recv_nbytes(sock, n):
     while len(data) < n:
         chunk = sock.recv(n - len(data))
         if not chunk:
-            raise ConnectionError("Connection closed")
+            raise ConnectionError("Connection closed by peer")
         data += chunk
     return data
