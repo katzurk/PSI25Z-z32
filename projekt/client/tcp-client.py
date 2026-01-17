@@ -71,12 +71,11 @@ class ClientSession:
         if not self.connected:
             print("[!] Not connected.")
             return
-
-        user_input = input("Client > ")
-        if not user_input:
-            return
-
         try:
+            user_input = input("Client > ")
+            if not user_input:
+                return
+
             plaintext = user_input.encode()
             ciphertext = otp_xor(plaintext, self.session_key, self.msg_count)
             packet = encode_message(MSG_REGULAR, ciphertext, self.session_key)
@@ -85,7 +84,7 @@ class ClientSession:
             print(f"[C] Sent message (No. {self.msg_count})")
             self.msg_count += 1
         except KeyboardInterrupt:
-                raise KeyboardInterrupt
+            print("\n[!] Interrupted by user.")
         except Exception as e:
             print(f"[!] Exception: {e}")
             self.cleanup()
@@ -134,24 +133,30 @@ def main():
     print_menu()
 
     while True:
-        choice = input("Choice > ").strip()
+        try:
+            choice = input("Choice > ").strip()
 
-        if choice == "1":
-            session.connect()
-        elif choice == "2":
-            session.send_message()
-        elif choice == "3":
-            session.disconnect()
-        elif choice == "4":
-            if session.connected:
+            if choice == "1":
+                session.connect()
+            elif choice == "2":
+                session.send_message()
+            elif choice == "3":
                 session.disconnect()
-            print("Exiting...")
-            break
-        elif choice == "5":
-            print_menu()
+            elif choice == "4":
+                if session.connected:
+                    session.disconnect()
+                print("Exiting...")
+                break
+            elif choice == "5":
+                print_menu()
 
-        else:
-            print("[!] Invalid choice. Type '5' to show the menu.")
+            else:
+                print("[!] Invalid choice. Type '5' to show the menu.")
+        
+        except KeyboardInterrupt:
+            print("\n[!] Interrupted by user.")
+            session.disconnect()
+            break
 
 
 if __name__ == "__main__":
